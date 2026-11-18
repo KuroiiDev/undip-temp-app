@@ -27,7 +27,7 @@ const { color } = tokens;
 
 const DOT_COUNT = 240;
 const HOLE_RADIUS = 78;
-const BASE_SPEED = 0.15;
+const BASE_SPEED = 0.30;
 const TILT = 0.35;
 const TEX = 32;
 
@@ -52,12 +52,14 @@ function projectAll(angle, swell, R, cx, cy) {
   const out = new Array(DOT_COUNT);
   const cosA = Math.cos(angle);
   const sinA = Math.sin(angle);
-  const tilt = TILT + Math.sin(angle * 0.5) * 0.05;
+  const tilt = TILT + Math.sin(angle * 0.8) * 0.16;
   const cosT = Math.cos(tilt);
   const sinT = Math.sin(tilt);
-  const rr = R * swell;
   for (let i = 0; i < DOT_COUNT; i++) {
     const p = BASE_PTS[i];
+    const wave = Math.sin(angle * 2.5 + p[1] * 3.5) * 0.06;
+    const curSwell = swell * (1 + wave);
+    const rr = R * curSwell;
     const x1 = p[0] * cosA + p[2] * sinA;
     const z1 = -p[0] * sinA + p[2] * cosA;
     const y1 = p[1] * cosT - z1 * sinT;
@@ -69,7 +71,7 @@ function projectAll(angle, swell, R, cx, cy) {
     const hx = sx - cx;
     const hy = sy - cy;
     const hidden = hx * hx + hy * hy < HOLE_RADIUS * HOLE_RADIUS;
-    const sc = 0.22 * (0.65 + 0.75 * depth) * swell;
+    const sc = 0.25 * (0.45 + 0.95 * depth * depth) * curSwell;
     out[i] = hidden
       ? [0, 0, -10000, -10000]
       : [sc, 0, sx - (TEX / 2) * sc, sy - (TEX / 2) * sc];
@@ -121,10 +123,11 @@ export function TempOrb({
     const a = angleY.value;
     const cosA = Math.cos(a);
     const sinA = Math.sin(a);
-    const tilt = TILT + Math.sin(a * 0.5) * 0.05;
+    const tilt = TILT + Math.sin(a * 0.8) * 0.16;
     const cosT = Math.cos(tilt);
     const sinT = Math.sin(tilt);
-    const swell = 1 + 0.04 * intensity.value;
+    const wave = Math.sin(a * 2.5 + p[1] * 3.5) * 0.06;
+    const swell = (1 + 0.04 * intensity.value) * (1 + wave);
     const rr = R * swell;
     const x1 = p[0] * cosA + p[2] * sinA;
     const z1 = -p[0] * sinA + p[2] * cosA;
@@ -140,7 +143,7 @@ export function TempOrb({
       val.set(0, 0, -10000, -10000);
       return;
     }
-    const sc = 0.22 * (0.65 + 0.75 * depth) * swell;
+    const sc = 0.25 * (0.45 + 0.95 * depth * depth) * swell;
     val.set(sc, 0, sx - (TEX / 2) * sc, sy - (TEX / 2) * sc);
   });
 
