@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -6,6 +6,7 @@ import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { MonitoringScreen } from "./src/screens/MonitoringScreen.js";
 import { ControlScreen } from "./src/screens/ControlScreen.js";
+import { SplashScreen } from "./src/screens/SplashScreen.js";
 import { assertConfig } from "./src/services/config.js";
 import { tokens } from "./src/theme/tokens.js";
 
@@ -18,9 +19,15 @@ const { color } = tokens;
 enableScreens(true);
 
 export default function App() {
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+
   useEffect(() => {
     assertConfig();
   }, []);
+
+  if (isSplashVisible) {
+    return <SplashScreen onFinish={() => setIsSplashVisible(false)} />;
+  }
 
   const theme = {
     ...DefaultTheme,
