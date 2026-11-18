@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Pressable,
 	RefreshControl,
@@ -107,7 +107,22 @@ export function MonitoringScreen() {
 	const [loading, setLoading] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
 	const [apiError, setApiError] = useState(null);
+	const [currentPage, setCurrentPage] = useState(1);
 	const reduceMotion = useReducedMotion();
+
+	const ITEMS_PER_PAGE = 5;
+	const totalPages = Math.max(1, Math.ceil(readings.length / ITEMS_PER_PAGE));
+
+	useEffect(() => {
+		if (currentPage > totalPages) {
+			setCurrentPage(totalPages);
+		}
+	}, [totalPages, currentPage]);
+
+	const paginatedReadings = useMemo(() => {
+		const start = (currentPage - 1) * ITEMS_PER_PAGE;
+		return readings.slice(start, start + ITEMS_PER_PAGE);
+	}, [readings, currentPage]);
 
 	const fetchReadings = useCallback(async () => {
 		setLoading(true);
@@ -402,7 +417,7 @@ export function MonitoringScreen() {
 								typeof value === "number" ? Number(value).toFixed(2) : "--",
 						},
 					]}
-					data={readings}
+					data={paginatedReadings}
 					keyExtractor={(item) => item.id}
 					loading={loading && !refreshing}
 					emptyTitle="No readings yet"
@@ -410,6 +425,68 @@ export function MonitoringScreen() {
 					emptyActionLabel="Refresh"
 					onEmptyAction={fetchReadings}
 				/>
+
+				{readings.length > 0 ? (
+					<View style={styles.paginationContainer}>
+						<Pressable
+							style={({ pressed }) => [
+								styles.paginationButton,
+								currentPage <= 1 && styles.paginationButtonDisabled,
+								pressed && currentPage > 1 && styles.pressed,
+							]}
+							onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+							disabled={currentPage <= 1}
+							accessibilityRole="button"
+							accessibilityLabel="Sebelumnya"
+						>
+							<Ionicons
+								name="chevron-back"
+								size={16}
+								color={currentPage <= 1 ? color.text3 : color.primary}
+							/>
+							<Text
+								style={[
+									styles.paginationButtonText,
+									currentPage <= 1 && styles.paginationButtonTextDisabled,
+								]}
+							>
+								Sebelumnya
+							</Text>
+						</Pressable>
+
+						<View style={styles.pageInfoPill}>
+							<Text style={styles.pageInfoText}>
+								Halaman {currentPage} dari {totalPages}
+							</Text>
+						</View>
+
+						<Pressable
+							style={({ pressed }) => [
+								styles.paginationButton,
+								currentPage >= totalPages && styles.paginationButtonDisabled,
+								pressed && currentPage < totalPages && styles.pressed,
+							]}
+							onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+							disabled={currentPage >= totalPages}
+							accessibilityRole="button"
+							accessibilityLabel="Berikutnya"
+						>
+							<Text
+								style={[
+									styles.paginationButtonText,
+									currentPage >= totalPages && styles.paginationButtonTextDisabled,
+								]}
+							>
+								Berikutnya
+							</Text>
+							<Ionicons
+								name="chevron-forward"
+								size={16}
+								color={currentPage >= totalPages ? color.text3 : color.primary}
+							/>
+						</Pressable>
+					</View>
+				) : null}
 			</ScrollView>
 		</View>
 	);
@@ -592,5 +669,52 @@ const styles = StyleSheet.create({
 	pressed: {
 		opacity: 0.9,
 		transform: [{ scale: 0.98 }],
+	},
+	paginationContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginTop: space.md,
+		paddingVertical: space.xs ?? 4,
+	},
+	paginationButton: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		backgroundColor: color.surface,
+		paddingVertical: 10,
+		paddingHorizontal: 14,
+		borderRadius: radius.card,
+		borderCurve: "continuous",
+		borderWidth: 1,
+		borderColor: color.border,
+		minHeight: tokens.hit,
+		boxShadow: shadow.card,
+	},
+	paginationButtonDisabled: {
+		opacity: 0.45,
+		backgroundColor: color.surface2,
+		borderColor: color.border,
+	},
+	paginationButtonText: {
+		fontSize: 13,
+		fontWeight: "600",
+		color: color.primary,
+	},
+	paginationButtonTextDisabled: {
+		color: color.text3,
+	},
+	pageInfoPill: {
+		backgroundColor: color.surface2,
+		paddingVertical: 6,
+		paddingHorizontal: 12,
+		borderRadius: radius.pill,
+		borderCurve: "continuous",
+	},
+	pageInfoText: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: color.text2,
+		fontVariant: ["tabular-nums"],
 	},
 });
