@@ -9,6 +9,9 @@ import { ControlScreen } from "./src/screens/ControlScreen.js";
 import { assertConfig } from "./src/services/config.js";
 import { tokens } from "./src/theme/tokens.js";
 
+import { BACKEND_URL } from "./src/services/config";
+console.log("BACKEND_URL:", BACKEND_URL);
+
 const Tab = createBottomTabNavigator();
 const { color } = tokens;
 
